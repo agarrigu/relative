@@ -1,87 +1,25 @@
 extern crate sdl2;
 
-use std::f64::consts::PI;
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
 use sdl2::audio::AudioSpecDesired;
 
-const DEFAULT_WIDTH: u32    = 800;
-const DEFAULT_HEIGHT: u32   = 600;
-const LIGHT_BLUE: Color     = Color::RGB(123, 176, 223);
-const FRAME_RATE: u32       = 60;
-const FRAME_MILI: u32       = 1000 / FRAME_RATE;
-const SAMPLE_RATE: i32      = 44_100;
-const TABLE_SIZE: usize     = SAMPLE_RATE as usize;
-const CHANNELS: u8          = 2;
-const C4: f32               = 261.63;
-const E4: f32               = 329.63;
-const VOLUME: f32           = 0.2;
-
-struct Position {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl Position {
-    pub fn new(x: i32, y: i32) -> Position {
-        Position {
-            x: x,
-            y: y,
-        }
-    }
-
-    pub fn change(&mut self, dir: &str, speed: i32) {
-        match dir {
-            "up" => self.y -= speed,
-            "down" => self.y += speed,
-            "left" => self.x -= speed,
-            "right" => self.x += speed,
-            _ => {}
-        }
-    }
-}
+mod audio;
+use audio::{gen_sqr_wave, gen_sine_wave, Phase};
+use audio::{SAMPLE_RATE, CHANNELS, WAVE_SIZE};
 
 
-struct Phase {
-    pub left: f32,
-    pub right: f32,
-}
+const DEFAULT_WIDTH:    u32 = 800;
+const DEFAULT_HEIGHT:   u32 = 600;
+const LIGHT_BLUE:     Color = Color::RGB(123, 176, 223);
+const GREEN_BLUE:     Color = Color::RGB(0, 255, 255);
+const FRAME_RATE:       u32 = 60;
+const FRAME_MILI:       u32 = 1000 / FRAME_RATE;
+const C4:               f32 = 261.63;
+const E4:               f32 = 329.63;
 
-impl Phase {
-    pub fn new() -> Phase {
-        Phase {
-            left: 0.0,
-            right: 0.0,
-        }
-    }
-
-    pub fn incr(&mut self, freq: f32) {
-        let table_size = TABLE_SIZE as f32;
-        self.left += freq;
-        self.right += freq;
-        if self.left >= table_size {self.left -= table_size}
-        if self.right >= table_size {self.right -= table_size}
-    }
-}
-
-
-fn gen_sqr_wave() -> [f32; TABLE_SIZE] {
-    let mut square_wave = [VOLUME; TABLE_SIZE];
-    for i in TABLE_SIZE/2..TABLE_SIZE {
-        square_wave[i] = -VOLUME;
-    } square_wave
-}
-
-fn gen_sine_wave() -> [f32; TABLE_SIZE] {
-    let mut sine_wave   = [0.0; TABLE_SIZE];
-    let mut i           = 0;
-    while i < TABLE_SIZE {
-        sine_wave[i] = (i as f64 / TABLE_SIZE as f64 * PI * 2.0).sin() as f32 * VOLUME;
-        i += 1;
-    } sine_wave
-}
 
 fn main() {
     /* General stuff */
@@ -90,7 +28,7 @@ fn main() {
     let video       = sdl_context.video().unwrap();
     let window      = video.window("rELaTivE", DEFAULT_WIDTH, DEFAULT_HEIGHT).build().unwrap();
     let mut canvas  = window.into_canvas().build().unwrap();
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.set_draw_color(GREEN_BLUE);
     canvas.clear();
     canvas.present();
     /* Audio stuff */
@@ -103,7 +41,7 @@ fn main() {
     let device      = audio.open_queue::<f32, _>(None, &audio_spec).unwrap();
     let square_wave = gen_sqr_wave();
     let sine_wave   = gen_sine_wave();
-    let mut wave    = [0.0 as f32; ((TABLE_SIZE / FRAME_RATE as usize) * 3) + 1 ];
+    let mut wave    = [0.0 as f32; WAVE_SIZE];
     device.queue_audio(&wave).unwrap();
     device.resume();
     let mut phase_c4 = Phase::new();
@@ -172,14 +110,13 @@ fn main() {
         canvas.fill_rect(rect).unwrap();
         canvas.present();
 
-
-        if device.size() < wave.len() as u32 * 8 {
+        if device.size() < wave.len() as u32 * 3 {
             let mut j = 0;
             while j < wave.len()  {
                 wave[j]     = (sine_wave[phase_c4.left as usize]
-                               + sine_wave[phase_e4.left as usize]
-                               + square_wave[phase_player.left as usize]) / 3.0;
-                wave[j + 1] = (sine_wave[phase_e4.right as usize]
+                               + square_wave[phase_e4.left as usize]
+                               + sine_wave[phase_player.left as usize]) / 3.0;
+                wave[j + 1] = (square_wave[phase_e4.right as usize]
                                + sine_wave[phase_e4.right as usize]
                                + square_wave[phase_player.right as usize]) / 3.0;
                 j += 2;
