@@ -1,0 +1,8 @@
+[package]
+name = "relative"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+sdl2 = "0.35"
