@@ -9,6 +9,8 @@ use sdl2::audio::AudioSpecDesired;
 mod audio;
 use audio::{gen_sqr_wave, gen_sine_wave, Phase};
 use audio::{SAMPLE_RATE, CHANNELS, WAVE_SIZE};
+mod control;
+use control::{Position, Dire};
 
 
 const DEFAULT_WIDTH:    u32 = 800;
@@ -19,6 +21,7 @@ const FRAME_RATE:       u32 = 60;
 const FRAME_MILI:       u32 = 1000 / FRAME_RATE;
 const C4:               f32 = 261.63;
 const E4:               f32 = 329.63;
+const SPEED:            i32 = 2;
 
 
 fn main() {
@@ -53,8 +56,9 @@ fn main() {
     /* Event stuff */
     let mut event_pump = sdl_context.event_pump().unwrap();
     /* Movement stuff */
-    let mut x = 0;
-    let mut y = 0;
+    let mut position = Position::new(0, 0);
+    // let mut x = 0;
+    // let mut y = 0;
     let mut move_up     = false;
     let mut move_right  = false;
     let mut move_left   = false;
@@ -96,14 +100,14 @@ fn main() {
             }
         }
 
-        if move_up      {y -= 2}
-        if move_down    {y += 2}
-        if move_left    {x -= 2}
-        if move_right   {x += 2}
+        if move_up      {position.change(Dire::Up, SPEED)}
+        if move_down    {position.change(Dire::Down, SPEED)}
+        if move_left    {position.change(Dire::Left, SPEED)}
+        if move_right   {position.change(Dire::Right, SPEED)}
 
-        player_pitch = (880.0 * (y as f32 / DEFAULT_HEIGHT as f32)) + 30.0;
+        player_pitch = (880.0 * (position.y as f32 / DEFAULT_HEIGHT as f32)) + 30.0;
 
-        let rect = Rect::new(x, y, 48, 48);
+        let rect = Rect::new(position.x, position.y, 48, 48);
 
         canvas.set_draw_color(LIGHT_BLUE);
         canvas.draw_rect(rect).unwrap();

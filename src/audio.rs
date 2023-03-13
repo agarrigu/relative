@@ -4,7 +4,7 @@ use std::f64::consts::PI;
 const FRAME_RATE:       u32 = 60;
 pub const SAMPLE_RATE:      i32 = 44_100;
 pub const TABLE_SIZE:     usize = SAMPLE_RATE as usize;
-pub const VOLUME:           f32 = 0.2;
+pub const VOLUME:           f32 = 0.07;
 pub const WAVE_SIZE:      usize = size_of::<f32>()
                               * CHANNELS as usize
                               * (TABLE_SIZE / FRAME_RATE as usize);
