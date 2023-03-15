@@ -15,6 +15,7 @@ use control::{Position, Dire};
 
 const DEFAULT_WIDTH:    u32 = 800;
 const DEFAULT_HEIGHT:   u32 = 600;
+const SQUARE_SIZE:      u32 = 48;
 const LIGHT_BLUE:     Color = Color::RGB(123, 176, 223);
 const GREEN_BLUE:     Color = Color::RGB(0, 255, 255);
 const FRAME_RATE:       u32 = 60;
@@ -25,8 +26,10 @@ const SPEED:            i32 = 2;
 
 
 fn main() {
-    /* General stuff */
+
+    /* Main init */
     let sdl_context = sdl2::init().unwrap();
+
     /* Graphic stuff */
     let video       = sdl_context.video().unwrap();
     let window      = video.window("rELaTivE", DEFAULT_WIDTH, DEFAULT_HEIGHT).build().unwrap();
@@ -34,6 +37,7 @@ fn main() {
     canvas.set_draw_color(GREEN_BLUE);
     canvas.clear();
     canvas.present();
+
     /* Audio stuff */
     let audio       = sdl_context.audio().unwrap();
     let audio_spec  = AudioSpecDesired {
@@ -47,18 +51,19 @@ fn main() {
     let mut wave    = [0.0 as f32; WAVE_SIZE];
     device.queue_audio(&wave).unwrap();
     device.resume();
-    let mut phase_c4 = Phase::new();
-    let mut phase_e4 = Phase::new();
-    let mut phase_player = Phase::new();
+    let mut phase_c4        = Phase::new();
+    let mut phase_e4        = Phase::new();
+    let mut phase_player    = Phase::new();
     let mut player_pitch: f32;
+
     /* Timer stuff */
     let mut timer = sdl_context.timer().unwrap();
+
     /* Event stuff */
     let mut event_pump = sdl_context.event_pump().unwrap();
+
     /* Movement stuff */
-    let mut position = Position::new(0, 0);
-    // let mut x = 0;
-    // let mut y = 0;
+    let mut position = Position::new(1, 1);
     let mut move_up     = false;
     let mut move_right  = false;
     let mut move_left   = false;
@@ -100,14 +105,24 @@ fn main() {
             }
         }
 
-        if move_up      {position.change(Dire::Up, SPEED)}
-        if move_down    {position.change(Dire::Down, SPEED)}
-        if move_left    {position.change(Dire::Left, SPEED)}
-        if move_right   {position.change(Dire::Right, SPEED)}
+
+        if move_up      {position.change(Dire::Up,      SPEED)}
+        if move_down    {position.change(Dire::Down,    SPEED)}
+        if move_left    {position.change(Dire::Left,    SPEED)}
+        if move_right   {position.change(Dire::Right,   SPEED)}
+
+        if position.x < 0 {position.change(Dire::Right, SPEED)}
+        if position.y < 0 {position.change(Dire::Down,  SPEED)}
+        if position.x >= (DEFAULT_WIDTH - SQUARE_SIZE) as i32 {
+            position.change(Dire::Left, SPEED)
+        }
+        if position.y >= (DEFAULT_HEIGHT - SQUARE_SIZE) as i32 {
+            position.change(Dire::Up, SPEED)
+        }
 
         player_pitch = (880.0 * (position.y as f32 / DEFAULT_HEIGHT as f32)) + 30.0;
 
-        let rect = Rect::new(position.x, position.y, 48, 48);
+        let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
 
         canvas.set_draw_color(LIGHT_BLUE);
         canvas.draw_rect(rect).unwrap();

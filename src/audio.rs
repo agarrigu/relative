@@ -10,6 +10,7 @@ pub const WAVE_SIZE:      usize = size_of::<f32>()
                               * (TABLE_SIZE / FRAME_RATE as usize);
 pub const CHANNELS:          u8 = 2;
 
+#[derive(Copy, Clone)]
 pub struct Phase {
     pub left: f32,
     pub right: f32,
