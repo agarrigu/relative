@@ -1,5 +1,4 @@
 extern crate sdl2;
-
 use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
@@ -16,12 +15,15 @@ use control::{Position, Dire};
 const DEFAULT_WIDTH:    u32 = 800;
 const DEFAULT_HEIGHT:   u32 = 600;
 const SQUARE_SIZE:      u32 = 48;
+const MAX_Y:            u32 = DEFAULT_HEIGHT - SQUARE_SIZE;
 const LIGHT_BLUE:     Color = Color::RGB(123, 176, 223);
 const GREEN_BLUE:     Color = Color::RGB(0, 255, 255);
 const FRAME_RATE:       u32 = 60;
 const FRAME_MILI:       u32 = 1000 / FRAME_RATE;
+const E1:               f32 = 41.20;
 const C4:               f32 = 261.63;
 const E4:               f32 = 329.63;
+const G6:               f32 = 1567.98;
 const SPEED:            i32 = 2;
 
 
@@ -46,6 +48,7 @@ fn main() {
         samples: None,
     };
     let device      = audio.open_queue::<f32, _>(None, &audio_spec).unwrap();
+    let octave_count = (G6 / E1).log2();
     let square_wave = gen_sqr_wave();
     let sine_wave   = gen_sine_wave();
     let mut wave    = [0.0 as f32; WAVE_SIZE];
@@ -63,11 +66,12 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     /* Movement stuff */
-    let mut position = Position::new(1, 1);
+    let mut position = Position::new(0, 0);
     let mut move_up     = false;
     let mut move_right  = false;
     let mut move_left   = false;
     let mut move_down   = false;
+
     /* Loop stuff */
     let mut i = 0;
 
@@ -113,14 +117,17 @@ fn main() {
 
         if position.x < 0 {position.change(Dire::Right, SPEED)}
         if position.y < 0 {position.change(Dire::Down,  SPEED)}
-        if position.x >= (DEFAULT_WIDTH - SQUARE_SIZE) as i32 {
+        if position.x >= MAX_Y as i32 {
             position.change(Dire::Left, SPEED)
         }
-        if position.y >= (DEFAULT_HEIGHT - SQUARE_SIZE) as i32 {
+        if position.y >= MAX_Y as i32 {
             position.change(Dire::Up, SPEED)
         }
 
-        player_pitch = (880.0 * (position.y as f32 / DEFAULT_HEIGHT as f32)) + 30.0;
+        // player_pitch = k * (position.y as f32).log2() + c;
+        let player_octave = position.y as f32 * octave_count / MAX_Y as f32;
+        player_pitch = 2_f32.powf(player_octave) * E1;
+
 
         let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
 
