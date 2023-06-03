@@ -10,14 +10,14 @@ use sdl2::audio::AudioQueue;
 use crate::notes::notes::{Notes, gen_note_map};
 use crate::user_audio::wave_gens::gen_sine_wave;
 use crate::user_audio::consts::WAVE_SIZE;
-use crate::Phase;
-use crate::control::direccion::{Position, Direction};
-use crate::user_video::consts::{FRAME_MILI, MAX_X, MAX_Y, SQUARE_SIZE};
+use crate::user_audio::phase::Phase;
+use crate::control::movement::{Position, move_avatar};
+use crate::user_video::consts::{FRAME_MILI, MAX_Y, SQUARE_SIZE};
 
 pub fn level_0(canvas: &mut Canvas<Window>,
                timer: &mut TimerSubsystem,
                event_pump: &mut EventPump,
-               device: &AudioQueue<f32>,
+               audio_queue: &AudioQueue<f32>,
                wave: &mut [f32; WAVE_SIZE ]) {
 
     let note_map = gen_note_map();
@@ -30,60 +30,34 @@ pub fn level_0(canvas: &mut Canvas<Window>,
     let mut player_pitch: f32;
 
     /* Movement stuff */
-    let mut position   = Position::new(0, 0);
-    let mut move_up    = false;
-    let mut move_right = false;
-    let mut move_left  = false;
-    let mut move_down  = false;
+    let mut position = Position {x: 0, y: 0 };
+
     'running: loop {
         let start_time = timer.ticks();
 
-        canvas.set_draw_color(light_gray);
-        canvas.clear();
+        // let poll_iter = event_pump.poll_iter();
 
-        // TODO: Make better
-        for event in event_pump.poll_iter() {
+        let events: Vec<Event> = event_pump.poll_iter().collect();
+
+        for event in &events {
             match event {
-                Event::KeyDown { keycode, .. } => match keycode {
+                Event::KeyDown {keycode, ..} => match keycode {
                     Some(Keycode::Escape) => break 'running,
-                    Some(Keycode::W) => move_up    = true,
-                    Some(Keycode::S) => move_down  = true,
-                    Some(Keycode::A) => move_left  = true,
-                    Some(Keycode::D) => move_right = true,
                     _ => {}
-                },
-                Event::KeyUp { keycode, .. } => match keycode {
-                    Some(Keycode::W) => move_up    = false,
-                    Some(Keycode::S) => move_down  = false,
-                    Some(Keycode::A) => move_left  = false,
-                    Some(Keycode::D) => move_right = false,
-                    _ => {}
-                },
+                }
                 _ => {}
             }
         }
 
-        if move_up    { position.change(Direction::Up) }
-        if move_down  { position.change(Direction::Down) }
-        if move_left  { position.change(Direction::Left) }
-        if move_right { position.change(Direction::Right) }
+        move_avatar(&mut position, events);
 
-        if position.x < 0             { position.change(Direction::Right) }
-        if position.y < 0             { position.change(Direction::Down) }
-        if position.x >= MAX_X as i32 { position.change(Direction::Left) }
-        if position.y >= MAX_Y as i32 { position.change(Direction::Up) }
-
+        /* Audio */
         let player_octave = position.y as f32 * octave_count / MAX_Y as f32;
-        player_pitch = 2_f32.powf(player_octave) * note_map.get(&Notes::E1).unwrap();
+        player_pitch = 2_f32.powf(player_octave)
+                       * note_map.get(&Notes::E1).unwrap();
 
-        let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
-
-        canvas.set_draw_color(light_blue);
-        canvas.draw_rect(rect).unwrap();
-        canvas.fill_rect(rect).unwrap();
-        canvas.present();
-
-        if device.size() < wave.len() as u32 * 2 {
+        if audio_queue.size() < wave.len() as u32 * 6 {
+            // for amp in wave.iter(). { }
             let mut j = 0;
             while j < wave.len() {
                 wave[j] = sine_wave[phase_player.left as usize];
@@ -92,11 +66,21 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
                 phase_player.next_ampl(player_pitch);
             }
-            device.queue_audio(wave).unwrap();
+            audio_queue.queue_audio(wave).unwrap();
         }
 
+        /* Graphix */
+        let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
+        canvas.set_draw_color(light_gray);
+        canvas.clear();
+        canvas.set_draw_color(light_blue);
+        canvas.draw_rect(rect).unwrap();
+        canvas.fill_rect(rect).unwrap();
+        canvas.present();
+
+        /* Frame stuff */
         let end_time = timer.ticks();
         let loop_duration = end_time - start_time;
-        if loop_duration > 0 { timer.delay(FRAME_MILI - loop_duration) }
+        if loop_duration > 0 { timer.delay(FRAME_MILI) }
     }
 }
