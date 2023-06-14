@@ -12,7 +12,43 @@ use crate::user_audio::wave_gens::gen_sine_wave;
 use crate::user_audio::consts::WAVE_SIZE;
 use crate::user_audio::phase::Phase;
 use crate::control::movement::{Position, move_avatar};
-use crate::user_video::consts::{FRAME_MILI, MAX_Y, SQUARE_SIZE};
+use crate::user_video::consts::{FRAME_MILI,MAX_X, MAX_Y, SQUARE_SIZE};
+
+const LIGHT_GRAY: Color = Color::RGB(220, 220, 200);
+const LIGHT_BLUE: Color = Color::RGB(123, 176, 223);
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+enum StateOctave{
+    Found,
+    NotFound,
+    CompleteLevel
+}
+
+fn background_color(state_octave: StateOctave, current_time: u32 , start_time: u32) -> Color {
+    let color: Color;
+    match state_octave {
+        StateOctave::NotFound => color = LIGHT_GRAY,
+        StateOctave::CompleteLevel => color = LIGHT_BLUE,
+        StateOctave::Found => {
+            let mut traspased_time = (current_time - start_time) as f32;
+            if traspased_time < 5000.0 {
+                color = LIGHT_GRAY;
+            } else {
+                traspased_time -= 5000.0;
+                let r: u8 = (((traspased_time / 5000.0)
+                              * (LIGHT_GRAY.r as f32 - LIGHT_BLUE.r as f32))
+                              + LIGHT_BLUE.r as f32) as u8;
+                let g: u8 = (((traspased_time / 5000.0)
+                              * (LIGHT_GRAY.g as f32 - LIGHT_BLUE.g as f32))
+                              + LIGHT_BLUE.g as f32) as u8;
+                let b: u8 = (((traspased_time / 5000.0)
+                              * (LIGHT_GRAY.b as f32 - LIGHT_BLUE.b as f32))
+                              + LIGHT_BLUE.b as f32) as u8;
+                color = Color::RGB(r, g, b)
+            }
+        }
+    } color
+}
 
 pub fn level_0(canvas: &mut Canvas<Window>,
                timer: &mut TimerSubsystem,
@@ -21,8 +57,6 @@ pub fn level_0(canvas: &mut Canvas<Window>,
                wave: &mut [f32; WAVE_SIZE ]) {
 
     let note_map = gen_note_map();
-    let light_blue = Color::RGB(123, 176, 223);
-    let light_gray = Color::RGB(220, 220, 220);
     let octave_count = (note_map.get(&Notes::G6).unwrap()
                        / note_map.get(&Notes::E1).unwrap()).log2();
     let sine_wave = gen_sine_wave();
@@ -30,15 +64,27 @@ pub fn level_0(canvas: &mut Canvas<Window>,
     let mut player_pitch: f32;
 
     /* Movement stuff */
-    let mut position = Position {x: 0, y: 0 };
+    let mut position = Position {x: MAX_X as i32 / 2, y: MAX_Y as i32 / 2 };
+
+    /* State stuff */
+    let mut current_state_octave = StateOctave::NotFound;
+    let mut start_found_time: u32 = timer.ticks();
 
     'running: loop {
-        let start_time = timer.ticks();
+        if current_state_octave == StateOctave::CompleteLevel {break}
+        let current_time = timer.ticks();
 
-        // let poll_iter = event_pump.poll_iter();
+        // /* State stuff */
+        // let last_state_octave = current_state_octave;
+        // if true {
+        //     current_state_octave = StateOctave::Found;
+        //     if last_state_octave == StateOctave::NotFound {
+        //         start_found_time = current_time;
+        //     }
+        // }
 
+        /* Movement stuff */
         let events: Vec<Event> = event_pump.poll_iter().collect();
-
         for event in &events {
             match event {
                 Event::KeyDown {keycode, ..} => match keycode {
@@ -48,7 +94,6 @@ pub fn level_0(canvas: &mut Canvas<Window>,
                 _ => {}
             }
         }
-
         move_avatar(&mut position, events);
 
         /* Audio */
@@ -71,16 +116,17 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
         /* Graphix */
         let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
-        canvas.set_draw_color(light_gray);
+        let background_color = background_color(StateOctave::Found, current_time, start_found_time);
+        canvas.set_draw_color(background_color);
         canvas.clear();
-        canvas.set_draw_color(light_blue);
+        canvas.set_draw_color(LIGHT_BLUE);
         canvas.draw_rect(rect).unwrap();
         canvas.fill_rect(rect).unwrap();
         canvas.present();
 
         /* Frame stuff */
         let end_time = timer.ticks();
-        let loop_duration = end_time - start_time;
+        let loop_duration = end_time - current_time;
         if loop_duration > 0 { timer.delay(FRAME_MILI) }
     }
 }
