@@ -80,7 +80,7 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
         /* State stuff */
         let last_state_octave = current_state_octave;
-        if true {
+        if position.y == 300 {
             current_state_octave = StateOctave::Found;
             if last_state_octave == StateOctave::NotFound {
                 start_found_time = Some(current_time);
