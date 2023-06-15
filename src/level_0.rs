@@ -24,7 +24,7 @@ enum StateOctave{
     CompleteLevel
 }
 
-fn background_color(state_octave: StateOctave, current_time: u32 , start_time: u32) -> Color {
+fn set_background_color(state_octave: StateOctave, current_time: u32 , start_time: u32) -> Color {
     let color: Color;
     match state_octave {
         StateOctave::NotFound => color = LIGHT_GRAY,
@@ -68,20 +68,35 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
     /* State stuff */
     let mut current_state_octave = StateOctave::NotFound;
-    let mut start_found_time: u32 = timer.ticks();
+    let mut start_found_time: Option<u32> = None;
+    let mut background_color = LIGHT_GRAY;
 
     'running: loop {
         if current_state_octave == StateOctave::CompleteLevel {break}
         let current_time = timer.ticks();
 
-        // /* State stuff */
-        // let last_state_octave = current_state_octave;
-        // if true {
-        //     current_state_octave = StateOctave::Found;
-        //     if last_state_octave == StateOctave::NotFound {
-        //         start_found_time = current_time;
-        //     }
-        // }
+        /* State stuff */
+        let last_state_octave = current_state_octave;
+        if true {
+            current_state_octave = StateOctave::Found;
+            if last_state_octave == StateOctave::NotFound {
+                start_found_time = Some(current_time);
+            }
+        } else {
+            start_found_time = None;
+        }
+
+        match start_found_time {
+            Some(time) => {
+                let transp_found_time = current_time - time;
+                if transp_found_time > 10000 {
+                    current_state_octave = StateOctave::CompleteLevel;
+                } else {
+                    background_color = set_background_color(current_state_octave, current_time, time);
+                }
+            },
+            None => {background_color = LIGHT_GRAY}
+        }
 
         /* Movement stuff */
         let events: Vec<Event> = event_pump.poll_iter().collect();
@@ -108,7 +123,6 @@ pub fn level_0(canvas: &mut Canvas<Window>,
                 wave[j] = sine_wave[phase_player.left as usize];
                 wave[j + 1] = sine_wave[phase_player.right as usize];
                 j += 2;
-
                 phase_player.next_ampl(player_pitch);
             }
             audio_queue.queue_audio(wave).unwrap();
@@ -116,7 +130,7 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
         /* Graphix */
         let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
-        let background_color = background_color(StateOctave::Found, current_time, start_found_time);
+        // let background_color = background_color(StateOctave::Found, current_time, start_found_time);
         canvas.set_draw_color(background_color);
         canvas.clear();
         canvas.set_draw_color(LIGHT_BLUE);
