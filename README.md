@@ -5,9 +5,10 @@
 
 ## Intro
 
-A ~game~ tech demo about music, built with Rust and Simple DirectMedia Layer.
+A ~game~ interactive audio visual square moving experience about music,
+built with Rust and Simple DirectMedia Layer.
 Used as an exuse to learn Rust, digital audio and SDL2 during my
-[recurse center] batch,
+[Recurse Center](https://www.recurse.com) batch,
 the premise of the game is to solve puzzles using relative pitch,
 as opposed to most music games, where rhythm is used.
 
