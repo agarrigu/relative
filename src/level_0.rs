@@ -1,6 +1,7 @@
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
+use sdl2::ttf::Sdl2TtfContext;
 use sdl2::TimerSubsystem;
 use sdl2::EventPump;
 use sdl2::event::Event;
@@ -16,6 +17,7 @@ use crate::user_video::consts::{FRAME_MILI,MAX_X, MAX_Y, SQUARE_SIZE};
 
 const LIGHT_GRAY: Color = Color::RGB(220, 220, 200);
 const LIGHT_BLUE: Color = Color::RGB(123, 176, 223);
+const SOLID_BLACK: Color = Color::RGB(0, 0, 0);
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum StateOctave{
@@ -51,6 +53,7 @@ fn set_background_color(state_octave: StateOctave, current_time: u32 , start_tim
 }
 
 pub fn level_0(canvas: &mut Canvas<Window>,
+               fonts: &mut Sdl2TtfContext,
                timer: &mut TimerSubsystem,
                event_pump: &mut EventPump,
                audio_queue: &AudioQueue<f32>,
@@ -115,9 +118,7 @@ pub fn level_0(canvas: &mut Canvas<Window>,
         let player_octave = position.y as f32 * octave_count / MAX_Y as f32;
         player_pitch = 2_f32.powf(player_octave)
                        * note_map.get(&Notes::E1).unwrap();
-
         if audio_queue.size() < wave.len() as u32 * 6 {
-            // for amp in wave.iter(). { }
             let mut j = 0;
             while j < wave.len() {
                 wave[j] = sine_wave[phase_player.left as usize];
@@ -130,12 +131,18 @@ pub fn level_0(canvas: &mut Canvas<Window>,
 
         /* Graphix */
         let rect = Rect::new(position.x, position.y, SQUARE_SIZE, SQUARE_SIZE);
-        // let background_color = background_color(StateOctave::Found, current_time, start_found_time);
+        let proggy = fonts.load_font("assets/fonts/ProggyTiny.ttf", 12).unwrap();
+        let surface = proggy.render(&position.y.to_string()).solid(SOLID_BLACK).unwrap();
+        let tetxture_creator = canvas.texture_creator();
+        let texture = tetxture_creator.create_texture_from_surface(&surface).unwrap();
+
+
         canvas.set_draw_color(background_color);
         canvas.clear();
         canvas.set_draw_color(LIGHT_BLUE);
         canvas.draw_rect(rect).unwrap();
         canvas.fill_rect(rect).unwrap();
+        canvas.copy(&texture, None, rect).unwrap();
         canvas.present();
 
         /* Frame stuff */

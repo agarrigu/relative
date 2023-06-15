@@ -16,7 +16,7 @@ most distros.
 
 - Install SDL2:
   ```sh
-  $ sudo apt-get install libsdl2-dev
+  $ sudo apt-get install libsdl2-dev libsdl2-ttf-dev
   ```
 
 - Clone the repository and change directory:

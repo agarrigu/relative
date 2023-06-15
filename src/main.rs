@@ -1,5 +1,7 @@
 extern crate sdl2;
 use sdl2::audio::AudioSpecDesired;
+use sdl2::ttf;
+
 
 mod user_audio;
 mod user_video;
@@ -18,6 +20,7 @@ fn main() {
     let sdl_context = sdl2::init().unwrap();
 
     /* Graphic stuff */
+    let mut fonts = ttf::init().unwrap();
     let video = sdl_context.video().unwrap();
     let window = video
         .window("rELaTivE", DEFAULT_WIDTH, DEFAULT_HEIGHT)
@@ -45,5 +48,5 @@ fn main() {
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     /* Levels */
-    level_0(&mut canvas, &mut timer, &mut event_pump, &audio_queue, &mut wave);
+    level_0(&mut canvas, &mut fonts, &mut timer, &mut event_pump, &audio_queue, &mut wave);
 }
