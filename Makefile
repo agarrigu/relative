@@ -1,6 +1,8 @@
 NAME = debug_build
 CXX = g++
-CXXFLAG	= -O0 -ggdb3
+CXXFLAG = -I/usr/include/SDL2 -D_REENTRANT
+DBFLAG = -O0 -ggdb3
+LDFLAG = -lSDL2
 files = \
 		main
 #files	
@@ -13,7 +15,7 @@ SRC = $(addsuffix .cpp,$(files))
 all: $(NAME)
 
 $(NAME): $(SRC)
-	$(CXX) $(CXXFLAG) $^ -o $@ -lSDL2
+	$(CXX) $(CXXFLAG) $(DBFLAG) $^ $(LDFLAG) -o $@
 
 clean:
 	*.o
