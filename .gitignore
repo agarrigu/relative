@@ -3,3 +3,4 @@
 a.out
 *.out
 debug_build
+.gdb_history
