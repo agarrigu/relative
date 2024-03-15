@@ -3,13 +3,13 @@
 	Copyright (C) 2024 A. Gar <>
 */
 
-#include "SDL2/SDL.h"
+#include "SDL.h"
 #define R_GAME_WINDOW_TITLE "rElAtiVe"
 #define R_GAME_WINDOW_W 400
 #define R_GAME_WINDOW_H 320
 
-/* TODO(al):
- *  - get nvim's lsp to look into /usr/include/SDL2/
+/*
+ * TODO(al):
  *  - add video buffer (hopefully with 4 byte wide pixels)
  *  - add audio buffer
  *  - add clean exit on input
