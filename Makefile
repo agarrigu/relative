@@ -1,7 +1,8 @@
 NAME = debug_build
-CXX = g+=
+CXX = g++
 CXXFLAG	= -O0 -ggdb3
 files = \
+		main
 #files	
 SRC = $(addsuffix .cpp,$(files))
 
@@ -12,7 +13,7 @@ SRC = $(addsuffix .cpp,$(files))
 all: $(NAME)
 
 $(NAME): $(SRC)
-	$(CXX) $(CXXFLAG) $^ -o $@
+	$(CXX) $(CXXFLAG) $^ -o $@ -lSDL2
 
 clean:
 	*.o
