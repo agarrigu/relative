@@ -8,6 +8,13 @@
 #define R_GAME_WINDOW_W 400
 #define R_GAME_WINDOW_H 320
 
+/* TODO(al):
+ *  - get nvim's lsp to look into /usr/include/SDL2/
+ *  - add video buffer (hopefully with 4 byte wide pixels)
+ *  - add audio buffer
+ *  - add clean exit on input
+ *  - add controller stuff
+ * */
 int
 main(int argc, char **argv)
 {
@@ -19,5 +26,6 @@ main(int argc, char **argv)
 		0, 0, R_GAME_WINDOW_W, R_GAME_WINDOW_H,
 		SDL_WINDOW_RESIZABLE
 		);
-	return (0);
+	SDL_Quit();
+	exit(EXIT_SUCCESS);
 }
