@@ -1,3 +1,4 @@
+The scope of this project has broadened immensely and now its being redone in C++
 
 # rELaTivE
 
@@ -7,18 +8,17 @@
 
 A ~game~ interactive audio visual square moving experience about music,
 built with Rust and Simple DirectMedia Layer.
-Used as an exuse to learn Rust, digital audio and SDL2 during my
+Used as an excuse to learn Rust, digital audio and SDL2 during my
 [Recurse Center](https://www.recurse.com) batch,
 the premise of the game is to solve puzzles using relative pitch,
 as opposed to most music games, where rhythm is used.
 
-There is no deffinite design yet, just a bunch of systems interacting with each
+There is no definitive design yet, just a bunch of systems interacting with each
 other making notes happen.
 The only available level is won by moving the avatar to y position 300,
 not very fun.
 
-
-### Setting up the Development Enviroment:
+### Setting up the Development Environment:
 
 This has been tested only in Debian Testing (Bookworm), though it should work
 most distros.
